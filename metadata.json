@@ -1,0 +1,8 @@
+{
+  "name": "Civil Work & Document Cloud",
+  "description": "Secure cloud ledger for Civil Contractors & Engineers to manage work estimates, Prama Orders, Measurement Books (MB), Bill Forms, Testing Reports, and site photos/PDFs in one unified matrix.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

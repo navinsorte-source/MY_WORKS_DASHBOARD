@@ -1,0 +1,197 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Checks if current authenticated engineer is either the Creator, Partner Engineer, or Authorized Dual Engineer
+    function isAuthorizedEngineer(data) {
+      return data.ownerEmail in ['navin.sorte@gmail.com', 'hemantkopulwar81@gmail.com'] ||
+        data.partnerEmail in ['navin.sorte@gmail.com', 'hemantkopulwar81@gmail.com'] ||
+        (request.auth != null && (
+          data.ownerId == request.auth.uid ||
+          (request.auth.token.email != null && (
+            data.ownerEmail == request.auth.token.email ||
+            (data.partnerEmail != '' && data.partnerEmail == request.auth.token.email)
+          ))
+        ));
+    }
+
+    // Entity Validation Blueprint: EngineerCredentials
+    function isValidEngineerCredentials(data) {
+      return data.keys().hasAll([
+        'ownerId', 'engineer1Name', 'engineer1Email', 'engineer1PassHash',
+        'engineer2Name', 'engineer2Email', 'engineer2PassHash', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'engineer1Name', 'engineer1Email', 'engineer1PassHash',
+        'engineer2Name', 'engineer2Email', 'engineer2PassHash', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.engineer1Name is string && data.engineer1Name.size() >= 1 && data.engineer1Name.size() <= 100 &&
+      data.engineer1Email is string && data.engineer1Email.size() >= 3 && data.engineer1Email.size() <= 150 &&
+      data.engineer1PassHash is string && data.engineer1PassHash.matches('^[a-f0-9]{64}$') &&
+      data.engineer2Name is string && data.engineer2Name.size() >= 1 && data.engineer2Name.size() <= 100 &&
+      data.engineer2Email is string && data.engineer2Email.size() >= 3 && data.engineer2Email.size() <= 150 &&
+      data.engineer2PassHash is string && data.engineer2PassHash.matches('^[a-f0-9]{64}$') &&
+      data.updatedAt is timestamp;
+    }
+
+    // Entity Validation Blueprint: WorkProject
+    function isValidWorkProject(data) {
+      return data.keys().hasAll([
+        'ownerId', 'ownerEmail', 'partnerEmail', 'workName', 'department', 'location',
+        'estimatedCost', 'workOrderNo', 'status', 'notes',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'ownerEmail', 'partnerEmail', 'workName', 'department', 'location',
+        'estimatedCost', 'workOrderNo', 'status', 'notes',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerEmail is string && data.ownerEmail.size() >= 3 && data.ownerEmail.size() <= 150 &&
+      data.partnerEmail is string && data.partnerEmail.size() <= 150 &&
+      data.workName is string && data.workName.size() >= 1 && data.workName.size() <= 200 &&
+      data.department is string && data.department.size() <= 150 &&
+      data.location is string && data.location.size() <= 150 &&
+      data.estimatedCost is number && data.estimatedCost >= 0 && data.estimatedCost <= 100000000000 &&
+      data.workOrderNo is string && data.workOrderNo.size() <= 100 &&
+      data.status is string && data.status in ['Ongoing', 'Billing Stage', 'Completed'] &&
+      data.notes is string && data.notes.size() <= 500 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Entity Validation Blueprint: WorkDocument (7 categories including work_order)
+    function isValidWorkDocument(data) {
+      return data.keys().hasAll([
+        'ownerId', 'ownerEmail', 'partnerEmail', 'workId', 'category', 'fileName',
+        'mimeType', 'fileSize', 'totalChunks', 'externalDriveUrl', 'remarks',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'ownerEmail', 'partnerEmail', 'workId', 'category', 'fileName',
+        'mimeType', 'fileSize', 'totalChunks', 'externalDriveUrl', 'remarks',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerEmail is string && data.ownerEmail.size() >= 3 && data.ownerEmail.size() <= 150 &&
+      data.partnerEmail is string && data.partnerEmail.size() <= 150 &&
+      data.workId is string && data.workId.size() >= 1 && data.workId.size() <= 128 && data.workId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.category is string && data.category in ['estimate', 'prama_order', 'work_order', 'measurement_book', 'bill_form', 'testing_report', 'work_photos'] &&
+      data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 200 &&
+      data.mimeType is string && data.mimeType.size() >= 1 && data.mimeType.size() <= 100 &&
+      data.fileSize is int && data.fileSize >= 0 && data.fileSize <= 50000000 &&
+      data.totalChunks is int && data.totalChunks >= 0 && data.totalChunks <= 100 &&
+      data.externalDriveUrl is string && data.externalDriveUrl.size() <= 500 &&
+      data.remarks is string && data.remarks.size() <= 200 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Entity Validation Blueprint: FileChunk
+    function isValidFileChunk(data) {
+      return data.keys().hasAll([
+        'ownerId', 'ownerEmail', 'partnerEmail', 'docId', 'workId', 'chunkIndex', 'data', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'ownerEmail', 'partnerEmail', 'docId', 'workId', 'chunkIndex', 'data', 'createdAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerEmail is string && data.ownerEmail.size() >= 3 && data.ownerEmail.size() <= 150 &&
+      data.partnerEmail is string && data.partnerEmail.size() <= 150 &&
+      data.docId is string && data.docId.size() >= 1 && data.docId.size() <= 128 && data.docId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.workId is string && data.workId.size() >= 1 && data.workId.size() <= 128 && data.workId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.chunkIndex is int && data.chunkIndex >= 0 && data.chunkIndex <= 100 &&
+      data.data is string && data.data.size() >= 1 && data.data.size() <= 750000 &&
+      data.createdAt is timestamp;
+    }
+
+    // Connection test endpoint
+    match /test/{docId} {
+      allow get: if isValidId(docId);
+    }
+
+    // Collection: engineerAuth (Dual Engineer Credentials & Password Hash Store)
+    match /engineerAuth/{configId} {
+      allow get, list: if true;
+      allow create: if isValidId(configId) && isValidEngineerCredentials(incoming()) &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(configId) && isValidEngineerCredentials(incoming()) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['ownerId', 'engineer1Name', 'engineer1Email', 'engineer1PassHash', 'engineer2Name', 'engineer2Email', 'engineer2PassHash', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Collection: works
+    match /works/{workId} {
+      allow get: if isValidId(workId) && isAuthorizedEngineer(existing());
+      allow list: if isAuthorizedEngineer(existing());
+      allow create: if isValidId(workId) && isValidWorkProject(incoming()) &&
+        isAuthorizedEngineer(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(workId) && isValidWorkProject(incoming()) &&
+        isAuthorizedEngineer(existing()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().ownerEmail == existing().ownerEmail &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['partnerEmail', 'workName', 'department', 'location', 'estimatedCost', 'workOrderNo', 'status', 'notes', 'updatedAt']);
+      allow delete: if isValidId(workId) && isAuthorizedEngineer(existing());
+    }
+
+    // Collection: workDocuments
+    match /workDocuments/{docId} {
+      allow get: if isValidId(docId) && isAuthorizedEngineer(existing());
+      allow list: if isAuthorizedEngineer(existing());
+      allow create: if isValidId(docId) && isValidWorkDocument(incoming()) &&
+        isAuthorizedEngineer(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/works/$(incoming().workId));
+      allow update: if isValidId(docId) && isValidWorkDocument(incoming()) &&
+        isAuthorizedEngineer(existing()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().ownerEmail == existing().ownerEmail &&
+        incoming().workId == existing().workId &&
+        incoming().category == existing().category &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['partnerEmail', 'fileName', 'mimeType', 'fileSize', 'totalChunks', 'externalDriveUrl', 'remarks', 'updatedAt']);
+      allow delete: if isValidId(docId) && isAuthorizedEngineer(existing());
+    }
+
+    // Collection: fileChunks
+    match /fileChunks/{chunkId} {
+      allow get: if isValidId(chunkId) && isAuthorizedEngineer(existing());
+      allow list: if isAuthorizedEngineer(existing());
+      allow create: if isValidId(chunkId) && isValidFileChunk(incoming()) &&
+        isAuthorizedEngineer(incoming()) &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/works/$(incoming().workId));
+      allow update: if false;
+      allow delete: if isValidId(chunkId) && isAuthorizedEngineer(existing());
+    }
+  }
+}

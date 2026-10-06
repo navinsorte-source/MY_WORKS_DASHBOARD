@@ -1,0 +1,354 @@
+{
+  "entities": {
+    "EngineerCredentials": {
+      "title": "EngineerCredentials",
+      "description": "Shared dual-engineer login accounts with email, name, and SHA-256 password hash.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the last updating engineer",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "engineer1Name": {
+          "type": "string",
+          "description": "Full Name & Designation of Engineer 1",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "engineer1Email": {
+          "type": "string",
+          "description": "Email Login ID of Engineer 1",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "engineer1PassHash": {
+          "type": "string",
+          "description": "SHA-256 hash of Engineer 1 password",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "engineer2Name": {
+          "type": "string",
+          "description": "Full Name & Designation of Engineer 2",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "engineer2Email": {
+          "type": "string",
+          "description": "Email Login ID of Engineer 2",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "engineer2PassHash": {
+          "type": "string",
+          "description": "SHA-256 hash of Engineer 2 password",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of update"
+        }
+      },
+      "required": [
+        "ownerId",
+        "engineer1Name",
+        "engineer1Email",
+        "engineer1PassHash",
+        "engineer2Name",
+        "engineer2Email",
+        "engineer2PassHash",
+        "updatedAt"
+      ]
+    },
+    "WorkProject": {
+      "title": "WorkProject",
+      "description": "A civil construction work project with its metadata and document summary shared between co-engineers.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the creator engineer",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerEmail": {
+          "type": "string",
+          "description": "Lowercase email of the creator engineer",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "partnerEmail": {
+          "type": "string",
+          "description": "Lowercase email of the 2nd partner engineer who shares full access",
+          "minLength": 0,
+          "maxLength": 150
+        },
+        "workName": {
+          "type": "string",
+          "description": "Name of the civil work / project (Kamache Naav)",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "department": {
+          "type": "string",
+          "description": "Department or Gram Panchayat / PWD / ZP name",
+          "minLength": 0,
+          "maxLength": 150
+        },
+        "location": {
+          "type": "string",
+          "description": "Village / Taluka / Site location",
+          "minLength": 0,
+          "maxLength": 150
+        },
+        "estimatedCost": {
+          "type": "number",
+          "description": "Estimated or Sanctioned Amount in INR"
+        },
+        "workOrderNo": {
+          "type": "string",
+          "description": "Prama Order / Work Order Reference Number",
+          "minLength": 0,
+          "maxLength": 100
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the work",
+          "enum": ["Ongoing", "Billing Stage", "Completed"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or MB references",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        }
+      },
+      "required": [
+        "ownerId",
+        "ownerEmail",
+        "partnerEmail",
+        "workName",
+        "department",
+        "location",
+        "estimatedCost",
+        "workOrderNo",
+        "status",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WorkDocument": {
+      "title": "WorkDocument",
+      "description": "A PDF or photo document metadata attached to a specific work project across 7 categories.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the uploader engineer",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerEmail": {
+          "type": "string",
+          "description": "Lowercase email of the uploader engineer",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "partnerEmail": {
+          "type": "string",
+          "description": "Lowercase email of the partner engineer",
+          "minLength": 0,
+          "maxLength": 150
+        },
+        "workId": {
+          "type": "string",
+          "description": "Parent WorkProject ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "category": {
+          "type": "string",
+          "description": "Document slot category (7 columns)",
+          "enum": [
+            "estimate",
+            "prama_order",
+            "work_order",
+            "measurement_book",
+            "bill_form",
+            "testing_report",
+            "work_photos"
+          ]
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Original or generated PDF file name",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type of the stored file",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "fileSize": {
+          "type": "number",
+          "description": "Total file size in bytes"
+        },
+        "totalChunks": {
+          "type": "number",
+          "description": "Number of chunks stored in fileChunks collection (0 if stored directly on Google Drive)"
+        },
+        "externalDriveUrl": {
+          "type": "string",
+          "description": "Google Drive webViewLink / download URL for the uploaded PDF",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "remarks": {
+          "type": "string",
+          "description": "Optional note about the document (e.g., Drive ID or MB No.)",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of upload"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of update"
+        }
+      },
+      "required": [
+        "ownerId",
+        "ownerEmail",
+        "partnerEmail",
+        "workId",
+        "category",
+        "fileName",
+        "mimeType",
+        "fileSize",
+        "totalChunks",
+        "externalDriveUrl",
+        "remarks",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FileChunk": {
+      "title": "FileChunk",
+      "description": "A base64 encoded chunk of a PDF or image file stored in Firestore shared with partner engineer.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the uploader",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerEmail": {
+          "type": "string",
+          "description": "Lowercase email of the uploader",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "partnerEmail": {
+          "type": "string",
+          "description": "Lowercase email of the partner engineer",
+          "minLength": 0,
+          "maxLength": 150
+        },
+        "docId": {
+          "type": "string",
+          "description": "Parent WorkDocument ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "workId": {
+          "type": "string",
+          "description": "Parent WorkProject ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "chunkIndex": {
+          "type": "number",
+          "description": "Zero-based index of the chunk"
+        },
+        "data": {
+          "type": "string",
+          "description": "Base64 string payload for this chunk",
+          "minLength": 1,
+          "maxLength": 750000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        }
+      },
+      "required": [
+        "ownerId",
+        "ownerEmail",
+        "partnerEmail",
+        "docId",
+        "workId",
+        "chunkIndex",
+        "data",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/engineerAuth/{configId}": {
+      "schema": {
+        "$ref": "#/entities/EngineerCredentials"
+      },
+      "description": "Stores dual-engineer Email IDs, designations, and SHA-256 password hashes."
+    },
+    "/works/{workId}": {
+      "schema": {
+        "$ref": "#/entities/WorkProject"
+      },
+      "description": "Stores civil work projects accessible by Engineer 1 and Engineer 2."
+    },
+    "/workDocuments/{docId}": {
+      "schema": {
+        "$ref": "#/entities/WorkDocument"
+      },
+      "description": "Stores document metadata and Google Drive links for the 7 categories per work project."
+    },
+    "/fileChunks/{chunkId}": {
+      "schema": {
+        "$ref": "#/entities/FileChunk"
+      },
+      "description": "Stores base64 data chunks for uploaded PDF and image documents."
+    }
+  }
+}
